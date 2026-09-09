@@ -1,54 +1,33 @@
-name: Build APK
+name: Build DessinInfini APK
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches: [ "main", "master" ]
+  workflow_dispatch: {}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Récupérer le code
+        uses: actions/checkout@v4
 
-      - name: Installer Java 17
+      - name: Configurer Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Installer le SDK Android
-        uses: android-actions/setup-android@v3
+      - name: Configurer Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
 
-      - name: Lister les fichiers du dépôt (diagnostic)
-        run: find . -not -path './.git/*' -not -path './.git' | sort
+      - name: Compiler l'APK de debug
+        run: gradle assembleDebug --stacktrace
 
-      - name: Localiser le dossier du projet
-        id: locate
-        run: |
-          FICHIER=$(find . -maxdepth 6 -name settings.gradle | head -n 1)
-          if [ -z "$FICHIER" ]; then
-            echo "Aucun settings.gradle trouvé dans le dépôt !"
-            exit 1
-          fi
-          DIR=$(dirname "$FICHIER")
-          echo "Projet Gradle trouvé dans : $DIR"
-          echo "project_dir=$DIR" >> "$GITHUB_OUTPUT"
-
-      - name: Générer le wrapper Gradle
-        working-directory: ${{ steps.locate.outputs.project_dir }}
-        run: gradle wrapper --gradle-version 8.7
-
-      - name: Rendre gradlew exécutable
-        working-directory: ${{ steps.locate.outputs.project_dir }}
-        run: chmod +x gradlew
-
-      - name: Compiler l'APK
-        working-directory: ${{ steps.locate.outputs.project_dir }}
-        run: ./gradlew assembleDebug
-
-      - name: Uploader l'APK
+      - name: Publier l'APK généré
         uses: actions/upload-artifact@v4
         with:
-          name: dessin-infini-apk
-          path: ${{ steps.locate.outputs.project_dir }}/app/build/outputs/apk/debug/app-debug.apk
+          name: DessinInfini-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
