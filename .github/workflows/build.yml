@@ -12,6 +12,9 @@ jobs:
       - name: Récupérer le code
         uses: actions/checkout@v4
 
+      - name: Extraire DessinInfini.zip
+        run: unzip -o DessinInfini.zip -d .
+
       - name: Configurer Java 17
         uses: actions/setup-java@v4
         with:
