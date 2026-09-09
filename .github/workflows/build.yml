@@ -20,17 +20,32 @@ jobs:
       - name: Installer le SDK Android
         uses: android-actions/setup-android@v3
 
+      - name: Localiser le dossier du projet
+        id: locate
+        run: |
+          FICHIER=$(find . -maxdepth 4 -name settings.gradle | head -n 1)
+          if [ -z "$FICHIER" ]; then
+            echo "Aucun settings.gradle trouvé dans le dépôt !"
+            exit 1
+          fi
+          DIR=$(dirname "$FICHIER")
+          echo "Projet Gradle trouvé dans : $DIR"
+          echo "project_dir=$DIR" >> "$GITHUB_OUTPUT"
+
       - name: Générer le wrapper Gradle
+        working-directory: ${{ steps.locate.outputs.project_dir }}
         run: gradle wrapper --gradle-version 8.7
 
       - name: Rendre gradlew exécutable
+        working-directory: ${{ steps.locate.outputs.project_dir }}
         run: chmod +x gradlew
 
       - name: Compiler l'APK
+        working-directory: ${{ steps.locate.outputs.project_dir }}
         run: ./gradlew assembleDebug
 
       - name: Uploader l'APK
         uses: actions/upload-artifact@v4
         with:
           name: dessin-infini-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ steps.locate.outputs.project_dir }}/app/build/outputs/apk/debug/app-debug.apk
