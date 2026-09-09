@@ -20,10 +20,13 @@ jobs:
       - name: Installer le SDK Android
         uses: android-actions/setup-android@v3
 
+      - name: Lister les fichiers du dépôt (diagnostic)
+        run: find . -not -path './.git/*' -not -path './.git' | sort
+
       - name: Localiser le dossier du projet
         id: locate
         run: |
-          FICHIER=$(find . -maxdepth 4 -name settings.gradle | head -n 1)
+          FICHIER=$(find . -maxdepth 6 -name settings.gradle | head -n 1)
           if [ -z "$FICHIER" ]; then
             echo "Aucun settings.gradle trouvé dans le dépôt !"
             exit 1
